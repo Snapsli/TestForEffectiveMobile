@@ -27,3 +27,6 @@ docker compose up --build
 ```bash
 npm test
 ```
+Данные админа :
+admin@example.com
+admin12345
