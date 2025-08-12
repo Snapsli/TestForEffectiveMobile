@@ -16,12 +16,10 @@
 5. `GET /api/users` — только админ
 6. `PATCH /api/users/:id/block` — админ или сам
 7. `PATCH /api/users/:id/unblock` — админ или сам
-8. `PATCH /api/users/:id` — обновление профиля (админ может менять роль)
-9. `PATCH /api/users/:id/password` — смена пароля (только сам)
 
 ## Быстрый старт (локально)
-npm install
 ```bash
+npm install
 docker compose up --build
 ```
 
