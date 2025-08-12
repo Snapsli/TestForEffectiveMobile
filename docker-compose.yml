@@ -1,0 +1,35 @@
+services:
+  mongo:
+    image: mongo:7
+    restart: unless-stopped
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo_data:/data/db
+  app:
+    build: .
+    restart: unless-stopped
+    environment:
+      - PORT=8000
+      - MONGO_URI=mongodb://mongo:27017/users_service
+      - JWT_SECRET=${JWT_SECRET:-change-me}
+      - JWT_EXPIRES_IN=7d
+      - ADMIN_EMAIL=${ADMIN_EMAIL:-admin@example.com}
+      - ADMIN_PASSWORD=${ADMIN_PASSWORD:-admin12345}
+      - ADMIN_OVERWRITE_PASSWORD=${ADMIN_OVERWRITE_PASSWORD:-false}
+    ports:
+      - "8000:8000"
+    depends_on:
+      - mongo
+  frontend:
+    build:
+      context: ./frontend
+      args:
+        - VITE_API_URL=http://localhost:8000
+    restart: unless-stopped
+    ports:
+      - "3000:80"
+    depends_on:
+      - app
+volumes:
+  mongo_data:
