@@ -20,14 +20,7 @@
 9. `PATCH /api/users/:id/password` — смена пароля (только сам)
 
 ## Быстрый старт (локально)
-```bash
-cp .env.example .env
-# пропишите MONGO_URI и JWT_SECRET
-npm i
-npm run dev
-```
-
-## Docker
+npm install
 ```bash
 docker compose up --build
 ```
