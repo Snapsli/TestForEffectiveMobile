@@ -27,6 +27,10 @@ docker compose up --build
 ```bash
 npm test
 ```
-Данные админа :
+
+Процесс запустится по адресу http://localhost:3000/
+
+
+Данные админа для входа :
 admin@example.com
 admin12345
