@@ -58,7 +58,7 @@ export default function UsersPage() {
               <td>{u.email}</td>
               <td>{u.role}</td>
               <td>{u.isActive ? "Активен" : "Заблокирован"}</td>
-              <td>
+              <td style={{ display: "flex", gap: 8 }}>
                 {u.isActive ? (
                   <button onClick={async () => {
                     try {
@@ -77,6 +77,26 @@ export default function UsersPage() {
                       alert(e.message || "Ошибка разблокировки");
                     }
                   }}>Разблокировать</button>
+                )}
+
+                {u.role === "user" ? (
+                  <button onClick={async () => {
+                    try {
+                      await UsersAPI.update(u.id, { role: "admin" }, token!);
+                      setUsers(prev => prev.map(x => x.id === u.id ? { ...x, role: "admin" } : x));
+                    } catch (e: any) {
+                      alert(e.message || "Не удалось назначить админом");
+                    }
+                  }}>Сделать админом</button>
+                ) : (
+                  <button onClick={async () => {
+                    try {
+                      await UsersAPI.update(u.id, { role: "user" }, token!);
+                      setUsers(prev => prev.map(x => x.id === u.id ? { ...x, role: "user" } : x));
+                    } catch (e: any) {
+                      alert(e.message || "Не удалось снять роль админа");
+                    }
+                  }}>Снять админа</button>
                 )}
               </td>
             </tr>
