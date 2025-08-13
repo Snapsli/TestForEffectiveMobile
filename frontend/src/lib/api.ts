@@ -48,6 +48,9 @@ export const UsersAPI = {
   async list(token: string) {
     return apiFetch(`/api/users`, {}, token);
   },
+  async exploreList(token: string) {
+    return apiFetch(`/api/users/explore/list`, {}, token);
+  },
   async block(id: string, token: string) {
     return apiFetch(`/api/users/${id}/block`, { method: "PATCH" }, token);
   },
@@ -59,6 +62,12 @@ export const UsersAPI = {
   },
   async changePassword(id: string, data: { currentPassword: string; newPassword: string }, token: string) {
     return apiFetch(`/api/users/${id}/password`, { method: "PATCH", body: JSON.stringify(data) }, token);
+  },
+  async follow(id: string, token: string) {
+    return apiFetch(`/api/users/${id}/follow`, { method: "POST" }, token);
+  },
+  async unfollow(id: string, token: string) {
+    return apiFetch(`/api/users/${id}/unfollow`, { method: "POST" }, token);
   },
 };
 

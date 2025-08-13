@@ -10,7 +10,7 @@ export async function getMe(req: Request & { user?: { sub: string; role: string 
   const user = await User.findById(requester.sub).lean();
   if (!user) return res.status(404).json({ error: "User not found" });
   const { passwordHash, _id, ...safe } = user as any;
-  return res.json({ id: _id.toString(), ...safe });
+  return res.json({ id: _id.toString(), followersCount: (user as any).followers?.length || 0, followingCount: (user as any).following?.length || 0, ...safe });
 }
 
 // 3. Get user by ID (admin or self)
@@ -23,13 +23,13 @@ export async function getUserById(req: Request & { user?: { sub: string; role: s
   if (!user) throw createError(404, "User not found");
 
   const { passwordHash, _id, ...safe } = user as any;
-  return res.json({ id: _id.toString(), ...safe });
+  return res.json({ id: _id.toString(), followersCount: (user as any).followers?.length || 0, followingCount: (user as any).following?.length || 0, ...safe });
 }
 
 // 4. List users (admin only)
 export async function listUsers(_req: Request, res: Response) {
   const users = await User.find().select("-passwordHash").lean();
-  return res.json(users.map((u: any) => ({ ...u, id: (u as any)._id.toString() })));
+  return res.json(users.map((u: any) => ({ ...u, id: (u as any)._id.toString(), followersCount: u.followers?.length || 0, followingCount: u.following?.length || 0 })));
 }
 
 // 5. Block user (admin or self)
@@ -106,4 +106,67 @@ export async function changePassword(req: Request & { user?: { sub: string; role
   user.passwordHash = await hashPassword(parsed.data.newPassword);
   await user.save();
   return res.json({ message: "Password updated" });
+}
+
+// Follow user (self follows another user)
+export async function followUser(req: Request & { user?: { sub: string; role: string } }, res: Response) {
+  const { id: targetId } = req.params;
+  const requester = req.user!;
+  if (requester.sub === targetId) return res.status(400).json({ error: "Cannot follow yourself" });
+
+  const [me, target] = await Promise.all([
+    User.findById(requester.sub),
+    User.findById(targetId),
+  ]);
+  if (!me || !target) return res.status(404).json({ error: "User not found" });
+
+  const alreadyFollowing = me.following.some((x: any) => x.toString() === target.id);
+  if (alreadyFollowing) return res.json({ message: "Already following" });
+
+  me.following.push(target._id as any);
+  target.followers.push(me._id as any);
+  await Promise.all([me.save(), target.save()]);
+  return res.json({ message: "Followed", targetId: target.id });
+}
+
+// Unfollow user
+export async function unfollowUser(req: Request & { user?: { sub: string; role: string } }, res: Response) {
+  const { id: targetId } = req.params;
+  const requester = req.user!;
+  if (requester.sub === targetId) return res.status(400).json({ error: "Cannot unfollow yourself" });
+
+  const [me, target] = await Promise.all([
+    User.findById(requester.sub),
+    User.findById(targetId),
+  ]);
+  if (!me || !target) return res.status(404).json({ error: "User not found" });
+
+  me.following = (me.following as any[]).filter((x: any) => x.toString() !== target.id) as any;
+  target.followers = (target.followers as any[]).filter((x: any) => x.toString() !== me.id) as any;
+  await Promise.all([me.save(), target.save()]);
+  return res.json({ message: "Unfollowed", targetId: target.id });
+}
+
+// Explore users (list for any authenticated user, includes follow state)
+export async function exploreUsers(req: Request & { user?: { sub: string; role: string } }, res: Response) {
+  const requester = req.user!;
+  const me = await User.findById(requester.sub).select("following").lean();
+  if (!me) return res.status(404).json({ error: "User not found" });
+
+  const followingSet = new Set(((me as any).following || []).map((x: any) => x.toString()));
+  const users = await User.find().select("-passwordHash").lean();
+  const list = users
+    .filter((u: any) => u._id.toString() !== requester.sub)
+    .map((u: any) => ({
+      id: u._id.toString(),
+      fullName: u.fullName,
+      birthDate: u.birthDate,
+      email: u.email,
+      role: u.role,
+      isActive: u.isActive,
+      followersCount: u.followers?.length || 0,
+      followingCount: u.following?.length || 0,
+      isFollowed: followingSet.has(u._id.toString()),
+    }));
+  return res.json(list);
 }

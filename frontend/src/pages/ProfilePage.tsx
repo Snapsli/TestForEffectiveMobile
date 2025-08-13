@@ -20,6 +20,11 @@ export default function ProfilePage() {
           <div><b>Email:</b> {user.email}</div>
           <div><b>Роль:</b> {user.role}</div>
           <div><b>Статус:</b> {user.isActive ? "Активен" : "Заблокирован"}</div>
+          {typeof (user as any).followersCount !== "undefined" && (
+            <div style={{ marginTop: 6 }}>
+              <b>Подписчики:</b> {(user as any).followersCount} · <b>Подписки:</b> {(user as any).followingCount}
+            </div>
+          )}
           <div style={{ marginTop: 12, display: "flex", gap: 8 }}>
             {user.isActive ? (
               <button

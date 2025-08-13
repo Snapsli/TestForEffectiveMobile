@@ -7,6 +7,8 @@ import { connectDB } from "./db.js";
 import { authRouter } from "./routes/auth.js";
 import { usersRouter } from "./routes/users.js";
 import { httpLogger } from "./middleware/logger.js";
+import { User } from "./models/User.js";
+import { hashPassword } from "./utils/password.js";
 const app = express();
 app.use(httpLogger);
 app.use(helmet());
@@ -21,6 +23,27 @@ app.use((err, _req, res, _next) => {
     res.status(status).json({ error: err.message || "Internal Server Error" });
 });
 connectDB().then(() => {
+    ensureAdminUser().catch((e) => console.error("ensureAdminUser error", e));
     app.listen(env.PORT, () => console.log(`Users service running on :${env.PORT}`));
 });
 export default app; // for tests
+async function ensureAdminUser() {
+    if (!env.ADMIN_EMAIL || !env.ADMIN_PASSWORD) {
+        console.warn("Admin credentials are not provided. Set ADMIN_EMAIL and ADMIN_PASSWORD to create default admin.");
+        return;
+    }
+    const existing = await User.findOne({ email: env.ADMIN_EMAIL });
+    const passwordHash = await hashPassword(env.ADMIN_PASSWORD);
+    if (!existing) {
+        await User.create({ fullName: "Administrator", birthDate: new Date(0), email: env.ADMIN_EMAIL, passwordHash, role: "admin", isActive: true });
+        console.log("Default admin user created:", env.ADMIN_EMAIL);
+        return;
+    }
+    if (env.ADMIN_OVERWRITE_PASSWORD) {
+        existing.passwordHash = passwordHash;
+        existing.role = "admin";
+        existing.isActive = true;
+        await existing.save();
+        console.log("Default admin user updated:", env.ADMIN_EMAIL);
+    }
+}

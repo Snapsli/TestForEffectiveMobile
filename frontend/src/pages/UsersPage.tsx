@@ -9,6 +9,8 @@ type UserListItem = {
   email: string;
   role: "admin" | "user";
   isActive: boolean;
+  followersCount?: number;
+  followingCount?: number;
 };
 
 export default function UsersPage() {
@@ -43,6 +45,7 @@ export default function UsersPage() {
             <th align="left">Email</th>
             <th align="left">Роль</th>
             <th align="left">Статус</th>
+            <th align="left">Подписчики</th>
             <th></th>
           </tr>
         </thead>
@@ -58,6 +61,7 @@ export default function UsersPage() {
               <td>{u.email}</td>
               <td>{u.role}</td>
               <td>{u.isActive ? "Активен" : "Заблокирован"}</td>
+              <td>{u.followersCount ?? 0} / {u.followingCount ?? 0}</td>
               <td style={{ display: "flex", gap: 8 }}>
                 {u.isActive ? (
                   <button onClick={async () => {

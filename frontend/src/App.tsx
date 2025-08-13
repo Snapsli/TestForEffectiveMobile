@@ -4,6 +4,7 @@ import LoginPage from "./pages/LoginPage";
 import RegisterPage from "./pages/RegisterPage";
 import ProfilePage from "./pages/ProfilePage";
 import UsersPage from "./pages/UsersPage";
+import ExplorePage from "./pages/ExplorePage";
 import { useAuth } from "./auth/AuthProvider";
 
 export default function App() {
@@ -15,6 +16,7 @@ export default function App() {
         <h2 style={{ margin: 0, marginRight: 12 }}>Test for Effective Mobile</h2>
         <nav style={{ display: "flex", gap: 12 }}>
           <Link to="/">Профиль</Link>
+          {isAuthenticated && <Link to="/explore">Люди</Link>}
           {isAuthenticated && user?.role === "admin" && <Link to="/users">Пользователи</Link>}
           {!isAuthenticated && <Link to="/login">Войти</Link>}
           {!isAuthenticated && <Link to="/register">Регистрация</Link>}
@@ -29,6 +31,7 @@ export default function App() {
         <Route path="/login" element={<LoginPage />} />
         <Route path="/register" element={<RegisterPage />} />
         <Route path="/users" element={<RequireAuth><UsersPage /></RequireAuth>} />
+        <Route path="/explore" element={<RequireAuth><ExplorePage /></RequireAuth>} />
         <Route path="/" element={<RequireAuth><ProfilePage /></RequireAuth>} />
         <Route path="*" element={<Navigate to="/" />} />
       </Routes>

@@ -74,4 +74,25 @@ describe("Users endpoints", () => {
       .send({ currentPassword: "password123", newPassword: "newpass456" });
     expect(change.status).toBe(200);
   });
+
+  it("user can follow and unfollow another user", async () => {
+    // create second user
+    const reg3 = await request(app).post("/api/auth/register").send({
+      fullName: "User Two",
+      birthDate: "1992-02-02",
+      email: "user2@example.com",
+      password: "password123"
+    });
+    const user2Id = reg3.body.id;
+
+    const follow = await request(app)
+      .post(`/api/users/${user2Id}/follow`)
+      .set("Authorization", `Bearer ${userToken}`);
+    expect(follow.status).toBe(200);
+
+    const unfollow = await request(app)
+      .post(`/api/users/${user2Id}/unfollow`)
+      .set("Authorization", `Bearer ${userToken}`);
+    expect(unfollow.status).toBe(200);
+  });
 });
